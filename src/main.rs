@@ -117,11 +117,12 @@ impl Editor {
         Ok(())
     }
     fn move_left(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
+        let current_line_len = self.buffer.line_at(self.location.y).len();
         if self.location.x > 0 {
             self.location.x -= 1;
         } else if self.location.x > 0 {
             self.location.x -= 1;
-            self.location.x = self.buffer.line_at(self.location.y).len();
+            self.location.x = current_line_len;
         }
         self.update_cursor(stdout)?;
         Ok(())
@@ -130,6 +131,9 @@ impl Editor {
         let current_line_len = self.buffer.line_at(self.location.y).len();
         if self.location.x + 1 < current_line_len {
             self.location.x += 1;
+        } else if self.location.y + 1 < self.buffer.line_count() {
+            self.location.y += 1;
+            self.location.x = 0;
         }
         self.update_cursor(stdout)?;
         Ok(())
@@ -196,8 +200,8 @@ impl Editor {
                     Key::Char(c) => {
                         self.buffer.insert_char(&self.location, c);
                         self.location.x += 1;
-                        self.view.buffer = self.buffer.clone();
                         self.update_cursor(&mut stdout)?;
+                        self.view.buffer = self.buffer.clone();
                     }
                     Key::Left | Key::Right | Key::Up | Key::Down => {
                         self.handle_cursor(key, &mut stdout)?
@@ -205,16 +209,19 @@ impl Editor {
                     Key::Backspace => {
                         if self.buffer.delete_char(&self.location) {
                             self.location.x = self.buffer.line_at(self.location.y).len();
+                            self.update_cursor(&mut stdout)?
                         }
                         self.view.buffer = self.buffer.clone();
                     }
                     Key::Esc => {
                         self.set_mode(Mode::Normal);
+                        self.update_cursor(&mut stdout)?;
                     }
                     _ => {}
                 },
             }
             self.view.render(&mut stdout)?;
+            self.update_cursor(&mut stdout)?;
             stdout.flush().unwrap();
         }
         Ok(())
