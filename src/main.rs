@@ -19,13 +19,18 @@ struct Location {
 struct Editor {
     mode: Mode,
     location: Location,
+    max_cols: usize,
+    max_rows: usize,
 }
 
 impl Editor {
     fn default() -> Self {
+        let (cols, rows) = ratatui::termion::terminal_size().unwrap_or((80, 24));
         Self {
             mode: Mode::Normal,
             location: Location { x: 0, y: 0 },
+            max_cols: cols as usize,
+            max_rows: cols as usize,
         }
     }
     fn set_mode(&mut self, mode: Mode) {
@@ -41,22 +46,30 @@ impl Editor {
         Ok(())
     }
     fn move_left(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
-        self.location.x -= 1;
+        if self.location.x > 0 {
+            self.location.x -= 1;
+        }
         self.udate_cursor(stdout)?;
         Ok(())
     }
     fn move_right(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
-        self.location.x += 1;
+        if self.location.x + 1 < self.max_cols {
+            self.location.x += 1;
+        }
         self.udate_cursor(stdout)?;
         Ok(())
     }
     fn move_up(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
-        self.location.y -= 1;
+        if self.location.y > 0 {
+            self.location.y -= 1;
+        }
         self.udate_cursor(stdout)?;
         Ok(())
     }
     fn move_down(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
-        self.location.y += 1;
+        if self.location.y + 1 < self.max_rows {
+            self.location.y += 1;
+        }
         self.udate_cursor(stdout)?;
         Ok(())
     }
