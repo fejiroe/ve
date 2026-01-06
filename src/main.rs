@@ -11,12 +11,20 @@ impl Editor {
     fn run(&self) -> Result<(), > {
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode()?;
-        write!(stdout, "{}{}q to exit", ratatui::termion::clear::All, ratatui::termion::cursor::Goto(1,1)).unwrap();
+        write!(stdout,
+            "{}{}ctrl q to exit",
+            ratatui::termion::clear::All,
+            ratatui::termion::cursor::Goto(1,1)
+            ).unwrap();
         stdout.flush().unwrap();
-        for c in stdin.events() {
-            let evt = c.unwrap();
-            match evt {
-                Event::Key(Key::Char('q')) => break,
+        for k in stdin.keys() {
+            let key = k.unwrap();
+            match key {
+                Key::Char(c) => println!("{}", c),
+                Key::Ctrl(c) => match c {
+                    'q' => break, 
+                    _ => {}
+                }
                 _ => {}
             }
             stdout.flush().unwrap();
