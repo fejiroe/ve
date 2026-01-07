@@ -4,11 +4,14 @@ use ratatui::termion::input::TermRead;
 use ratatui::termion::raw::IntoRawMode;
 use ratatui::termion::terminal_size;
 use std::env;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::io::{Error, Read, Result, Write, stdin, stdout};
 
 enum Mode {
     Normal,
     Edit,
+    Command,
 }
 
 #[derive(Default, Clone, Copy)]
@@ -31,14 +34,14 @@ impl Default for Buffer {
 }
 
 impl Buffer {
-    pub fn insert_char(&mut self, loc: &Location, c: char) {
+    fn insert_char(&mut self, loc: &Location, c: char) {
         let line = &mut self.lines[loc.y];
         while line.len() <= loc.x {
             line.push(' ');
         }
         line.insert(loc.x, c);
     }
-    pub fn delete_char(&mut self, loc: &Location) -> bool {
+    fn delete_char(&mut self, loc: &Location) -> bool {
         if loc.y == 0 && loc.x == 0 {
             return false;
         }
@@ -52,11 +55,25 @@ impl Buffer {
             true
         }
     }
-    pub fn line_at(&self, y: usize) -> &str {
+    fn line_at(&self, y: usize) -> &str {
         self.lines.get(y).map(|s| s.as_str()).unwrap_or("")
     }
-    pub fn line_count(&self) -> usize {
+    fn line_count(&self) -> usize {
         self.lines.len()
+    }
+    fn is_empty(&self) -> bool {
+        self.lines.is_empty()
+    }
+    fn buffer_to_string(&self) -> String {
+        let mut out = String::new();
+        return out;
+    }
+    fn read_file (&self, path: &Path ) {
+        let input = fs::read_to_string(path);
+    }
+    fn write_file (&self, path: &Path) {
+        let mut out = self.buffer_to_string();
+        fs::write(path, out);
     }
 }
 
@@ -72,6 +89,7 @@ impl View {
             ratatui::termion::clear::All,
             ratatui::termion::cursor::Goto(1, 1)
         )?;
+        
         for (idx, line) in self.buffer.lines.iter().enumerate() {
             write!(stdout, "{}\r\n", line)?;
         }
@@ -80,6 +98,7 @@ impl View {
 }
 
 struct Editor {
+    current_file: PathBuf,
     mode: Mode,
     buffer: Buffer,
     view: View,
@@ -92,6 +111,7 @@ impl Default for Editor {
     fn default() -> Self {
         let (cols, rows) = ratatui::termion::terminal_size().unwrap_or((80, 24));
         Self {
+            current_file: PathBuf::new(),
             mode: Mode::Normal,
             buffer: Buffer::default(),
             view: View {
@@ -198,8 +218,9 @@ impl Editor {
                     // Key::Char('/') => ,
                     // Key::Char('?') => ,
                     Key::Left | Key::Right | Key::Up | Key::Down => {
-                        self.handle_cursor(key, &mut stdout)?
+            ;            self.handle_cursor(key, &mut stdout)?
                     }
+                    // Key::Ctrl('s') => self.buffer.write_file(&self.current_file),
                     Key::Ctrl('q') => break,
                     _ => {}
                 },
@@ -224,7 +245,7 @@ impl Editor {
                     }
                     Key::Left | Key::Right | Key::Up | Key::Down => {
                         self.handle_cursor(key, &mut stdout)?
-                    }
+            ;        }
                     Key::Backspace => {
                         if self.buffer.delete_char(&self.location) {
                             self.location.x = self.buffer.line_at(self.location.y).len();
@@ -238,11 +259,20 @@ impl Editor {
                     }
                     _ => {}
                 },
+                Mode::Command => match key {
+                    Key::Esc => {
+                        self.set_mode(Mode::Normal);
+                        self.update_cursor(&mut stdout)?;
+                    }
+                    _ => {}
+                },
             }
             self.view.render(&mut stdout)?;
             self.update_cursor(&mut stdout)?;
             stdout.flush().unwrap();
         }
+        write!(stdout, "{}{}", ratatui::termion::cursor::Show, ratatui::termion::clear::All)?;
+        stdout.flush()?;
         Ok(())
     }
 }
