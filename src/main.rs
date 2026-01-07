@@ -67,7 +67,7 @@ impl Buffer {
         if self.is_empty() {
             return String::new();
         } else {
-            return self.lines.join("\\n");
+            return self.lines.join("\n");
         }
     }
     fn read_file(&mut self, path: &Path) -> Result<()> {
