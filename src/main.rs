@@ -120,9 +120,6 @@ impl Editor {
         let current_line_len = self.buffer.line_at(self.location.y).len();
         if self.location.x > 0 {
             self.location.x -= 1;
-        } else if self.location.x > 0 {
-            self.location.x -= 1;
-            self.location.x = current_line_len;
         }
         self.update_cursor(stdout)?;
         Ok(())
@@ -189,7 +186,10 @@ impl Editor {
                     // Key::Char('x') => ,
                     // Key::Char('s') => ,
                     // Key::Char('r') => ,
+                    // Key::Char('u') => ,
                     // Key::Char('v') => ,
+                    // Key::Char('/') => ,
+                    // Key::Char('?') => ,
                     Key::Left | Key::Right | Key::Up | Key::Down => {
                         self.handle_cursor(key, &mut stdout)?
                     }
@@ -238,5 +238,15 @@ fn main() -> Result<()> {
 mod tests {
     use super::*;
     #[test]
-    fn test_something() {}
+    /* fail, expected 'a' got 'a ' (space at end?) */
+    fn buffer_insert_and_delete() {
+        let mut buf = Buffer::default();
+        let loc = Location { x: 0, y: 0 };
+        buf.insert_char(&loc, 'a');
+        assert_eq!(buf.line_at(0), "a");
+        assert_eq!(buf.line_count(), 1);
+        let deleted = buf.delete_char(&loc);
+        assert!(deleted);
+        assert_eq!(buf.line_at(0), "");
+    }
 }
