@@ -5,3 +5,6 @@ edition = "2024"
 
 [dependencies]
 ratatui = { version = "0.30.0", default-features = false, features = ["termion"] }
+
+[lib]
+path = "src/lib/lib.rs"

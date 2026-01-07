@@ -9,6 +9,8 @@ use std::io::ErrorKind;
 use std::io::{Error, Read, Result, Write, stdin, stdout};
 use std::path::{Path, PathBuf};
 
+use ve::Terminal;
+
 enum Mode {
     Normal,
     Edit,
@@ -220,15 +222,15 @@ impl Editor {
     }
     fn run(&mut self) -> Result<()> {
         let stdin = stdin();
-        let mut stdout = stdout().into_raw_mode()?;
+        let mut term = Terminal::new()?;
         write!(
-            stdout,
+            term.stdout,
             "{}{}",
             ratatui::termion::clear::All,
             ratatui::termion::cursor::Goto(1, 1)
         )
         .unwrap();
-        stdout.flush().unwrap();
+        term.stdout.flush().unwrap();
         for k in stdin.keys() {
             let key = k?;
             match self.mode {
@@ -243,7 +245,7 @@ impl Editor {
                     // Key::Char('/') => ,
                     // Key::Char('?') => ,
                     Key::Left | Key::Right | Key::Up | Key::Down => {
-                        self.handle_cursor(key, &mut stdout)?
+                        self.handle_cursor(key, &mut term.stdout)?
                     }
                     Key::Ctrl('s') => self.buffer.write_file(&self.current_file)?,
                     Key::Ctrl('q') => break,
@@ -260,7 +262,7 @@ impl Editor {
                         self.location.y += 1;
                         self.location.x = 0;
                         self.view.buffer = self.buffer.clone();
-                        self.update_cursor(&mut stdout)?;
+                        self.update_cursor(&mut term.stdout)?;
                     }
                     Key::Char('\t') => {
                         let tab_width = 4;
@@ -270,13 +272,13 @@ impl Editor {
                         let target_col =
                             ((self.location.x + tab_width - 1) / tab_width) * tab_width;
                         self.location.x = target_col;
-                        self.update_cursor(&mut stdout)?;
+                        self.update_cursor(&mut term.stdout)?;
                         self.view.buffer = self.buffer.clone();
                     }
                     Key::Char(c) => {
                         self.buffer.insert_char(&self.location, c);
                         self.location.x += 1;
-                        self.update_cursor(&mut stdout)?;
+                        self.update_cursor(&mut term.stdout)?;
                         self.view.buffer = self.buffer.clone();
                     }
                     Key::Backspace => {
@@ -288,38 +290,31 @@ impl Editor {
                             } else if self.location.x > 0 {
                                 self.location.x -= 1;
                             }
-                            self.update_cursor(&mut stdout)?
+                            self.update_cursor(&mut term.stdout)?
                         }
                         self.view.buffer = self.buffer.clone();
                     }
                     Key::Esc => {
                         self.set_mode(Mode::Normal);
-                        self.update_cursor(&mut stdout)?;
+                        self.update_cursor(&mut term.stdout)?;
                     }
                     Key::Left | Key::Right | Key::Up | Key::Down => {
-                        self.handle_cursor(key, &mut stdout)?;
+                        self.handle_cursor(key, &mut term.stdout)?;
                     }
                     _ => {}
                 },
                 Mode::Command => match key {
                     Key::Esc => {
                         self.set_mode(Mode::Normal);
-                        self.update_cursor(&mut stdout)?;
+                        self.update_cursor(&mut term.stdout)?;
                     }
                     _ => {}
                 },
             }
-            self.view.render(&mut stdout)?;
-            self.update_cursor(&mut stdout)?;
-            stdout.flush().unwrap();
+            self.view.render(&mut term.stdout)?;
+            self.update_cursor(&mut term.stdout)?;
+            term.stdout.flush().unwrap();
         }
-        write!(
-            stdout,
-            "{}{}",
-            ratatui::termion::cursor::Show,
-            ratatui::termion::clear::All
-        )?;
-        stdout.flush()?;
         Ok(())
     }
 }
