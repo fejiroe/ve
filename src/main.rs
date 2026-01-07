@@ -67,7 +67,7 @@ impl Buffer {
         if self.is_empty() {
             return String::new();
         } else {
-            return self.lines.join("\r\n");
+            return self.lines.join("\\n");
         }
     }
     fn read_file(&mut self, path: &Path) -> Result<()> {
@@ -268,9 +268,6 @@ impl Editor {
                         self.update_cursor(&mut stdout)?;
                         self.view.buffer = self.buffer.clone();
                     }
-                    Key::Left | Key::Right | Key::Up | Key::Down => {
-                        self.handle_cursor(key, &mut stdout)?;
-                    }
                     Key::Backspace => {
                         if self.buffer.delete_char(&self.location) {
                             if self.location.x == 0 && self.location.y > 0 {
@@ -287,6 +284,9 @@ impl Editor {
                     Key::Esc => {
                         self.set_mode(Mode::Normal);
                         self.update_cursor(&mut stdout)?;
+                    }
+                    Key::Left | Key::Right | Key::Up | Key::Down => {
+                        self.handle_cursor(key, &mut stdout)?;
                     }
                     _ => {}
                 },
