@@ -37,25 +37,22 @@ impl Default for Buffer {
 impl Buffer {
     fn insert_char(&mut self, loc: &Location, c: char) {
         let line = &mut self.lines[loc.y];
-        // off by one?
-        while line.len() < loc.x {
-            line.push(' ');
-        }
         line.insert(loc.x, c);
     }
     fn delete_char(&mut self, loc: &Location) -> bool {
         if loc.y == 0 && loc.x == 0 {
             return false;
         }
-        let line = &mut self.lines[loc.y];
         if loc.x > 0 {
+            let line = &mut self.lines[loc.y];
             line.remove(loc.x - 1);
-            true
         } else {
-            let prev_line = self.lines.remove(loc.y);
-            self.lines[loc.y - 1].push_str(&prev_line);
-            true
+            let current_line = self.lines.remove(loc.y);
+            self.lines[loc.y - 1].push_str(&current_line);
+            let new_y = loc.y - 1;
+            let new_x = std::cmp::min(loc.x, self.lines[new_y].len());
         }
+        true
     }
     fn line_at(&self, y: usize) -> &str {
         self.lines.get(y).map(|s| s.as_str()).unwrap_or("")
@@ -95,7 +92,7 @@ impl Buffer {
 #[derive(Default)]
 struct View {
     buffer: Buffer,
-    need_update: bool,
+    needs_update: bool,
 }
 impl View {
     fn render(&self, stdout: &mut std::io::Stdout) -> Result<()> {
@@ -132,7 +129,7 @@ impl Default for Editor {
             buffer: Buffer::default(),
             view: View {
                 buffer: Buffer::default(),
-                need_update: false,
+                needs_update: false,
             },
             location: Location { x: 0, y: 0 },
             max_cols: cols as usize,
@@ -276,7 +273,13 @@ impl Editor {
                     }
                     Key::Backspace => {
                         if self.buffer.delete_char(&self.location) {
-                            self.location.x = self.buffer.line_at(self.location.y).len();
+                            if self.location.x == 0 && self.location.y > 0 {
+                                self.location.y -= 1;
+                                let prev_len = self.buffer.line_at(self.location.y).len();
+                                self.location.x = std::cmp::min(prev_len, self.location.x);
+                            } else if self.location.x > 0 {
+                                self.location.x -= 1;
+                            }
                             self.update_cursor(&mut stdout)?
                         }
                         self.view.buffer = self.buffer.clone();
@@ -314,7 +317,7 @@ fn main() -> Result<()> {
     let mut editor = Editor::default();
     if let Some(file_name) = env::args().nth(1) {
         let path = PathBuf::from(&file_name);
-        editor.open_file(&path);
+        editor.open_file(&path)?;
     }
     editor.run()?;
     Ok(())
