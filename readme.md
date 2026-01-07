@@ -10,7 +10,7 @@ todo:
 - cmds
 - visual/select mode
 - config
-- status line
+- status line (+ print dbg to status line)
 - syntax highlighting
 
 - bugs, error handling, testing
