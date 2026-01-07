@@ -1,3 +1,4 @@
+use ratatui::symbols::line;
 use ratatui::termion::event::Key;
 use ratatui::termion::input::TermRead;
 use ratatui::termion::raw::IntoRawMode;
@@ -117,16 +118,19 @@ impl Editor {
         Ok(())
     }
     fn move_left(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
-        let current_line_len = self.buffer.line_at(self.location.y).len();
+        let line_len = self.buffer.line_at(self.location.y).len();
         if self.location.x > 0 {
             self.location.x -= 1;
+        } else if self.location.y > 0 {
+            self.location.y -= 1;
+            self.location.x = line_len;
         }
         self.update_cursor(stdout)?;
         Ok(())
     }
     fn move_right(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
-        let current_line_len = self.buffer.line_at(self.location.y).len();
-        if self.location.x + 1 < current_line_len {
+        let line_len = self.buffer.line_at(self.location.y).len();
+        if self.location.x + 1 < line_len {
             self.location.x += 1;
         } else if self.location.y + 1 < self.buffer.line_count() {
             self.location.y += 1;
@@ -139,18 +143,21 @@ impl Editor {
         if self.location.y > 0 {
             self.location.y -= 1;
         }
-        if self.location.y >= self.buffer.line_count() {
-            self.location.y = self.buffer.line_count().saturating_sub(1);
+        let line_len = self.buffer.line_at(self.location.y).len();
+        if self.location.x > line_len {
+            self.location.x = line_len;
         }
         self.update_cursor(stdout)?;
         Ok(())
     }
     fn move_down(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
-        if self.location.y + 1 < self.max_rows {
+        let last_line = self.buffer.line_count().saturating_sub(1);
+        if self.location.y < last_line {
             self.location.y += 1;
         }
-        if self.location.y >= self.buffer.line_count() {
-            self.location.y = self.buffer.line_count().saturating_sub(1);
+        let line_len = self.buffer.line_at(self.location.y).len();
+        if self.location.x >= line_len {
+            self.location.x = line_len;
         }
         self.update_cursor(stdout)?;
         Ok(())
@@ -197,6 +204,18 @@ impl Editor {
                     _ => {}
                 },
                 Mode::Edit => match key {
+                    Key::Char('\n') => {
+                        let cur_line = self.buffer.line_at(self.location.y).to_owned();
+                        let (left, right) = cur_line.split_at(self.location.x);
+                        self.buffer.lines[self.location.y] = left.to_string();
+                        self.buffer
+                            .lines
+                            .insert(self.location.y + 1, right.to_string());
+                        self.location.y += 1;
+                        self.location.x = 0;
+                        self.view.buffer = self.buffer.clone();
+                        self.update_cursor(&mut stdout)?;
+                    }
                     Key::Char(c) => {
                         self.buffer.insert_char(&self.location, c);
                         self.location.x += 1;
