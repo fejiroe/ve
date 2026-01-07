@@ -37,7 +37,8 @@ impl Default for Buffer {
 impl Buffer {
     fn insert_char(&mut self, loc: &Location, c: char) {
         let line = &mut self.lines[loc.y];
-        while line.len() <= loc.x {
+        // off by one?
+        while line.len() < loc.x {
             line.push(' ');
         }
         line.insert(loc.x, c);
@@ -86,7 +87,7 @@ impl Buffer {
     }
     fn write_file(&self, path: &Path) -> Result<()> {
         let out = self.buffer_to_string();
-        fs::write(path, out);
+        fs::write(path, out)?;
         Ok(())
     }
 }
@@ -323,7 +324,6 @@ fn main() -> Result<()> {
 mod tests {
     use super::*;
     #[test]
-    /* fail, expected 'a' got 'a ' (space at end?) */
     fn buffer_insert_and_delete() {
         let mut buf = Buffer::default();
         let loc = Location { x: 0, y: 0 };
