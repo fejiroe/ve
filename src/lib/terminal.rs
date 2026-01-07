@@ -1,9 +1,9 @@
 use ratatui::termion::{
     cursor,
     raw::{IntoRawMode, RawTerminal},
-    screen::{AlternateScreen, IntoAlternateScreen, ToMainScreen},
+    screen::{AlternateScreen, IntoAlternateScreen},
 };
-use std::io::{Read, Result, Stdout, Write, stdin, stdout};
+use std::io::{Result, Stdout, Write, stdout};
 
 pub struct Terminal {
     pub stdout: AlternateScreen<RawTerminal<Stdout>>,
