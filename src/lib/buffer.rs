@@ -50,9 +50,9 @@ impl Buffer {
     }
     pub fn buffer_to_string(&self) -> String {
         if self.is_empty() {
-            return String::new();
+            String::new()
         } else {
-            return self.lines.join("\n");
+            self.lines.join("\n")
         }
     }
     pub fn read_file(&mut self, path: &Path) -> Result<()> {
