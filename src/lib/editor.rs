@@ -144,6 +144,16 @@ impl Editor {
         }
         Ok(())
     }
+    fn delete_under_cursor(&mut self) {
+        let line_len = self.buffer.line_at(self.location.y).len();
+        if self.location.x < line_len {
+            let line = &mut self.buffer.lines[self.location.y];
+            line.remove(self.location.x);
+        } else if self.location.y + 1 < self.buffer.line_count() {
+            let next = self.buffer.lines.remove(self.location.y + 1);
+            self.buffer.lines[self.location.y].push_str(&next);
+        }
+    }
     pub fn run(&mut self) -> Result<()> {
         let stdin = stdin();
         let mut term = Terminal::new()?;
@@ -172,15 +182,18 @@ impl Editor {
                         self.set_mode(Mode::Edit);
                     }
                     Key::Char('i') => self.set_mode(Mode::Edit),
-                    /*
-                    Key::Char('x') => { // crashes if empty/no char at location
-                        self.buffer.delete_char(&self.location); // off by one for some reason lol
+                    Key::Char('x') => {
+                        self.delete_under_cursor();
                         self.update_view();
-                        self.view.buffer = self.buffer.clone();
-                        self.update_cursor(&mut term.stdout)?
+                        self.update_cursor(&mut term.stdout)?;
                     }
-                    */
-                    // Key::Char('s') => {//do same as x, but enter edit mode}
+                    Key::Char('s') => {
+                        self.delete_under_cursor();
+                        self.update_view();
+                        self.update_cursor(&mut term.stdout)?;
+                        self.set_mode(Mode::Edit);
+                    }
+
                     // Key::Char('r') =>
                     // Key::Char('u') => ,
                     // Key::Char('v') => ,
