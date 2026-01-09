@@ -224,8 +224,7 @@ impl Editor {
                         for _ in 0..tab_width {
                             self.buffer.insert_char(&self.location, ' ');
                         }
-                        let target_col =
-                            ((self.location.x + tab_width - 1) / tab_width) * tab_width;
+                        let target_col = self.location.x.div_ceil(tab_width) * tab_width;
                         self.location.x = target_col;
                         self.update_view();
                         self.update_cursor(&mut term.stdout)?;
