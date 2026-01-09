@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{Error, Result};
+use std::io::Result;
 use std::path::Path;
 
 #[derive(Default, Clone, Copy)]

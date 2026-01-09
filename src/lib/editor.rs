@@ -1,7 +1,7 @@
 use ratatui::termion::event::Key;
 use ratatui::termion::input::TermRead;
 use std::io::ErrorKind;
-use std::io::{Error, Read, Result, Write, stdin};
+use std::io::{Result, Write, stdin};
 use std::path::{Path, PathBuf};
 
 use crate::buffer::Buffer;

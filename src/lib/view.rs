@@ -1,5 +1,5 @@
 use crate::buffer::Buffer;
-use std::io::{Error, Result, Write};
+use std::io::{Result, Write};
 
 #[derive(Default)]
 pub struct View {

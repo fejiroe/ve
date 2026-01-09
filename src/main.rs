@@ -1,6 +1,5 @@
 use std::env;
-use std::io::ErrorKind;
-use std::io::{Error, Result};
+use std::io::Result;
 use std::path::PathBuf;
 
 use ve::Editor;

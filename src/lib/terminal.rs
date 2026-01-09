@@ -3,7 +3,7 @@ use ratatui::termion::{
     raw::{IntoRawMode, RawTerminal},
     screen::{AlternateScreen, IntoAlternateScreen},
 };
-use std::io::{Result, Stdout, Write, stdout};
+use std::io::{Stdout, Write, stdout};
 
 pub struct Terminal {
     pub stdout: AlternateScreen<RawTerminal<Stdout>>,
