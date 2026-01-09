@@ -49,6 +49,9 @@ impl Editor {
             }
             Err(e) => return Err(e),
         }
+        self.location = Location { x: 0, y: 0 };
+        self.view.offset_x = 0;
+        self.view.offset_y = 0;
         self.view.buffer = self.buffer.clone();
         Ok(())
     }
@@ -61,7 +64,7 @@ impl Editor {
         let max_rows = rows as usize;
         if self.location.y < self.view.offset_y {
             self.view.offset_y = self.location.y;
-        } else if self.location.y >= self.view.offset_y + max_rows {
+        } else if self.location.y > self.view.offset_y + max_rows {
             self.view.offset_y = self.location.y - max_rows + 1;
         }
         if self.location.x < self.view.offset_x {
@@ -192,15 +195,15 @@ impl Editor {
                             ((self.location.x + tab_width - 1) / tab_width) * tab_width;
                         self.location.x = target_col;
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
                         self.view.buffer = self.buffer.clone();
+                        self.update_cursor(&mut term.stdout)?;
                     }
                     Key::Char(c) => {
                         self.buffer.insert_char(&self.location, c);
                         self.location.x += 1;
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
                         self.view.buffer = self.buffer.clone();
+                        self.update_cursor(&mut term.stdout)?;
                     }
                     Key::Backspace => {
                         if self.buffer.delete_char(&self.location) {
@@ -212,6 +215,7 @@ impl Editor {
                                 self.location.x -= 1;
                             }
                             self.update_view();
+                            self.view.buffer = self.buffer.clone();
                             self.update_cursor(&mut term.stdout)?
                         }
                         self.view.buffer = self.buffer.clone();
