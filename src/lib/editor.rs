@@ -160,10 +160,11 @@ impl Editor {
                     }
                     Key::Char('\t') => {
                         let tab_width = 4;
-                        for _ in 0..tab_width {
+                        let target_col = (self.cursor.x / tab_width + 1) * tab_width;
+                        let spaces_needed = target_col - self.cursor.x;
+                        for _ in 0..spaces_needed {
                             self.buffer.insert_char(&(Location::from(self.cursor)), ' ');
                         }
-                        let target_col = self.cursor.x.div_ceil(tab_width) * tab_width;
                         self.cursor.x = target_col;
                         self.update_view();
                         self.update_cursor(&mut term.stdout)?;
