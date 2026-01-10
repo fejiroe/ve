@@ -96,19 +96,8 @@ impl Editor {
             self.buffer.lines[self.cursor.y].push_str(&next);
         }
     }
-    pub fn run(&mut self) -> Result<()> {
+    fn hadle_keys(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
         let stdin = stdin();
-        let mut term = Terminal::new()?;
-        write!(
-            term.stdout,
-            "{}{}",
-            ratatui::termion::clear::All,
-            ratatui::termion::cursor::Goto(1, 1)
-        )
-        .unwrap();
-        term.stdout.flush().unwrap();
-        self.view.render(&mut term.stdout, &self.buffer)?;
-        self.update_cursor(&mut term.stdout)?;
         for k in stdin.keys() {
             let key = k?;
             match self.mode {
@@ -128,12 +117,12 @@ impl Editor {
                     Key::Char('x') => {
                         self.delete_under_cursor();
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                     }
                     Key::Char('s') => {
                         self.delete_under_cursor();
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                         self.set_mode(Mode::Edit);
                     }
                     // Key::Char('b') =>
@@ -160,7 +149,7 @@ impl Editor {
                         self.cursor.y += 1;
                         self.cursor.x = 0;
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                     }
                     Key::Char('\t') => {
                         let tab_width = 4;
@@ -171,13 +160,13 @@ impl Editor {
                         }
                         self.cursor.x = target_col;
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                     }
                     Key::Char(c) => {
                         self.buffer.insert_char(&(Location::from(self.cursor)), c);
                         self.cursor.x += 1;
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                     }
                     Key::Backspace => {
                             self.delete_under_cursor();
@@ -189,16 +178,16 @@ impl Editor {
                                 self.cursor.x -= 1;
                             }
                             self.update_view();
-                            self.update_cursor(&mut term.stdout)?
+                            self.update_cursor(stdout)?
                     }
                     Key::Esc => {
                         self.set_mode(Mode::Normal);
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                     }
                     Key::Left | Key::Right | Key::Up | Key::Down => {
                         self.handle_cursor(key)?;
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                     }
                     _ => {}
                 },
@@ -206,7 +195,7 @@ impl Editor {
                     Key::Esc => {
                         self.set_mode(Mode::Normal);
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                     }
                     _ => {}
                 },
@@ -214,16 +203,31 @@ impl Editor {
                     Key::Esc => {
                         self.set_mode(Mode::Normal);
                         self.update_view();
-                        self.update_cursor(&mut term.stdout)?;
+                        self.update_cursor(stdout)?;
                     }
                     _ => {}
                 },
 
             }
-            self.view.render(&mut term.stdout, &self.buffer)?;
-            self.update_cursor(&mut term.stdout)?;
-            term.stdout.flush().unwrap();
+            self.view.render(stdout, &self.buffer)?;
+            self.update_cursor(stdout)?;
+            stdout.flush().unwrap();
         }
+        Ok(())
+    }
+    pub fn run(&mut self) -> Result<()> {
+        let mut term = Terminal::new()?;
+        write!(
+            term.stdout,
+            "{}{}",
+            ratatui::termion::clear::All,
+            ratatui::termion::cursor::Goto(1, 1)
+        )
+        .unwrap();
+        term.stdout.flush().unwrap();
+        self.view.render(&mut term.stdout, &self.buffer)?;
+        self.update_cursor(&mut term.stdout)?;
+        self.hadle_keys(&mut term.stdout)?; 
         Ok(())
     }
 }
