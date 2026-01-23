@@ -54,12 +54,12 @@ impl Line {
         l.rebuild();
         l
     }
-    fn grapheme_at(&self, idx: usize) -> Option<&str> {
+    pub fn grapheme_at(&self, idx: usize) -> Option<&str> {
         let start = *self.graphemes.get(idx)?;
         let end = *self.graphemes.get(idx + 1)?;
         Some(&self.raw[start..end])
     }
-    fn grapheme_len(&self) -> usize {
+    pub fn grapheme_len(&self) -> usize {
         self.graphemes.len() - 1
     }
 }
