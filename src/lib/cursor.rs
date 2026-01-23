@@ -21,12 +21,12 @@ impl Cursor {
             self.x -= 1;
         } else if self.y > 0 {
             self.y -= 1;
-            let prev_len = buffer.line_at(self.y).len();
+            let prev_len = buffer.lines[self.y].grapheme_len();
             self.x = prev_len.saturating_sub(1);
         }
     }
     pub fn move_right(&mut self, buffer: &crate::buffer::Buffer) {
-        let line_len = buffer.line_at(self.y).len();
+        let line_len = buffer.lines[self.y].grapheme_len();
         if self.x + 1 < line_len {
             self.x += 1;
         } else if self.y + 1 < buffer.line_count() {
@@ -38,7 +38,7 @@ impl Cursor {
         if self.y > 0 {
             self.y -= 1;
         }
-        let line_len = buffer.line_at(self.y).len();
+        let line_len = buffer.lines[self.y].grapheme_len();
         if self.x > line_len {
             self.x = line_len;
         }
@@ -48,7 +48,7 @@ impl Cursor {
         if self.y < last_line {
             self.y += 1;
         }
-        let line_len = buffer.line_at(self.y).len();
+        let line_len = buffer.lines[self.y].grapheme_len();
         if self.x > line_len {
             self.x = line_len;
         }
