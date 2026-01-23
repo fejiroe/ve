@@ -6,6 +6,7 @@ use std::io::{Result, Write, stdin};
 use std::path::{Path, PathBuf};
 
 use crate::buffer::Buffer;
+use crate::buffer::Line;
 use crate::buffer::Location;
 use crate::cursor::Cursor;
 use crate::terminal::Terminal;
@@ -95,7 +96,7 @@ impl Editor {
             line.remove(self.cursor.x);
         } else if self.cursor.y + 1 < self.buffer.line_count() {
             let next = self.buffer.lines.remove(self.cursor.y + 1);
-            self.buffer.lines[self.cursor.y].push_str(&next);
+            self.buffer.lines[self.cursor.y].push_str(&next.raw);
         }
     }
     fn handle_keys(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
@@ -148,10 +149,10 @@ impl Editor {
                     Key::Char('\n') => {
                         let cur_line = self.buffer.line_at(self.cursor.y).to_owned();
                         let (left, right) = cur_line.split_at(self.cursor.x);
-                        self.buffer.lines[self.cursor.y] = left.to_string();
+                        self.buffer.lines[self.cursor.y] = Line::from_string(left.to_owned());
                         self.buffer
                             .lines
-                            .insert(self.cursor.y + 1, right.to_string());
+                            .insert(self.cursor.y + 1, Line::from_string(right.to_owned()));
                         self.cursor.y += 1;
                         self.cursor.x = 0;
                         self.update_view();

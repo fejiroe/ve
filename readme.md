@@ -6,6 +6,7 @@ simple modal editor in rust.
 
 todo:
 
+- refactor key handling into separate file
 - undo/redo
 - about / help / man screen/popup
 - more motions
@@ -15,6 +16,8 @@ todo:
 - config
 - status line (+ print dbg to status line)
 - syntax highlighting
+- ui
+- line number/relative line
 
 - bugs, error handling, testing
 

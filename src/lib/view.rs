@@ -22,8 +22,8 @@ impl View {
         let start_line = self.offset_y;
         let end_line = usize::min(start_line + max_rows, buffer.line_count());
         for line in &buffer.lines[start_line..end_line] {
-            let visible = if self.offset_x < line.len() {
-                &line[self.offset_x..usize::min(self.offset_x + max_cols, line.len())]
+            let visible = if self.offset_x < line.raw.len() {
+                &line.raw[self.offset_x..usize::min(self.offset_x + max_cols, line.raw.len())]
             } else {
                 ""
             };
