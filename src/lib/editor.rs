@@ -70,8 +70,10 @@ impl Editor {
         let _max_cols = cols as usize;
         let max_rows = rows as usize;
         let (new_offset_x, new_offset_y) = self.cursor.maybe_scroll(&self.view);
-        let current_line_len = self.buffer.line_at(new_offset_y).len();
-        self.view.offset_x = new_offset_x.min(current_line_len.saturating_sub(1));
+        let line = &self.buffer.lines[new_offset_y];
+        let current_line_len = line.raw.len();
+        let new_byte_x = *line.graphemes.get(new_offset_x).unwrap_or(&line.raw.len());
+        self.view.offset_x = new_byte_x.min(current_line_len.saturating_sub(1));
         let max_offset_y = self.buffer.line_count().saturating_sub(max_rows);
         self.view.offset_y = new_offset_y.min(max_offset_y);
     }

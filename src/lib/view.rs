@@ -22,11 +22,9 @@ impl View {
         let start_line = self.offset_y;
         let end_line = usize::min(start_line + max_rows, buffer.line_count());
         for line in &buffer.lines[start_line..end_line] {
-            let visible = if self.offset_x < line.raw.len() {
-                &line.raw[self.offset_x..usize::min(self.offset_x + max_cols, line.raw.len())]
-            } else {
-                ""
-            };
+            let start_byte = *line.graphemes.get(self.offset_x).unwrap_or(&line.raw.len());
+            let end_byte = usize::min(start_byte + max_cols, line.raw.len());
+            let visible = &line.raw[start_byte..end_byte];
             write!(stdout, "{}\r\n", visible)?;
         }
         stdout.flush()
