@@ -100,123 +100,143 @@ impl Editor {
             self.buffer.lines[self.cursor.y].push_str(&next.raw);
         }
     }
+    fn process_key(&mut self, key: Key, stdout: &mut std::io::Stdout) -> Result<()> {
+        match self.mode {
+            Mode::Normal => self.handle_normal(key, stdout),
+            Mode::Edit => self.handle_edit(key, stdout),
+            Mode::Command => self.handle_command(key, stdout),
+            Mode::Visual => self.handle_visual(key, stdout),
+        }
+    }
+    fn handle_normal(&mut self, key: Key, stdout: &mut std::io::Stdout) -> Result<()> {
+        match key {
+            Key::Char(':') => self.set_mode(Mode::Command),
+            Key::Char('a') => {
+                let line_len = self.buffer.line_at(self.cursor.y).len();
+                if self.cursor.x < line_len {
+                    self.cursor.x += 1;
+                } else if self.cursor.y + 1 < self.buffer.line_count() {
+                    self.cursor.y += 1;
+                    self.cursor.x = 0;
+                }
+                self.set_mode(Mode::Edit);
+            }
+            Key::Char('i') => self.set_mode(Mode::Edit),
+            Key::Char('x') => {
+                self.delete_under_cursor();
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            Key::Char('s') => {
+                self.delete_under_cursor();
+                self.update_view();
+                self.update_cursor(stdout)?;
+                self.set_mode(Mode::Edit);
+            }
+            // Key::Char('b') =>
+            // Key::Char('w') =>
+            // Key::Char('e') =>
+            // Key::Char('r') =>
+            // Key::Char('u') => ,
+            // Key::Char('/') => ,
+            // Key::Char('?') => ,
+            Key::Char('v') => self.set_mode(Mode::Visual),
+            Key::Left | Key::Right | Key::Up | Key::Down => {
+                self.handle_cursor(key)?;
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            Key::Ctrl('s') => self.write_file(&self.current_file)?,
+            Key::Ctrl('q') => std::process::exit(0),
+            _ => {}
+        }
+        Ok(())
+    }
+    fn handle_edit(&mut self, key: Key, stdout: &mut std::io::Stdout) -> Result<()> {
+        match key {
+            Key::Char('\n') => {
+                let cur_line = self.buffer.line_at(self.cursor.y).to_owned();
+                let (left, right) = cur_line.split_at(self.cursor.x);
+                self.buffer.lines[self.cursor.y] = Line::from_string(left.to_owned());
+                self.buffer
+                    .lines
+                    .insert(self.cursor.y + 1, Line::from_string(right.to_owned()));
+                self.cursor.y += 1;
+                self.cursor.x = 0;
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            Key::Char('\t') => {
+                let tab_width = 4;
+                let target_col = (self.cursor.x / tab_width + 1) * tab_width;
+                let spaces_needed = target_col - self.cursor.x;
+                for _ in 0..spaces_needed {
+                    self.buffer.insert_char(&(Location::from(self.cursor)), ' ');
+                }
+                self.cursor.x = target_col;
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            Key::Char(c) => {
+                self.buffer.insert_char(&(Location::from(self.cursor)), c);
+                self.cursor.x += 1;
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            Key::Backspace => {
+                self.delete_under_cursor();
+                if self.cursor.x == 0 && self.cursor.y > 0 {
+                    self.cursor.y -= 1;
+                    let prev_len = self.buffer.lines[self.cursor.y].grapheme_len();
+                    self.cursor.x = std::cmp::min(prev_len, self.cursor.x);
+                } else if self.cursor.x > 0 {
+                    self.cursor.x -= 1;
+                }
+                self.update_view();
+                self.update_cursor(stdout)?
+            }
+            Key::Esc => {
+                self.set_mode(Mode::Normal);
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            Key::Left | Key::Right | Key::Up | Key::Down => {
+                self.handle_cursor(key)?;
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
+    fn handle_command(&mut self, key: Key, stdout: &mut std::io::Stdout) -> Result<()> {
+        match key {
+            Key::Esc => {
+                self.set_mode(Mode::Normal);
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+    fn handle_visual(&mut self, key: Key, stdout: &mut std::io::Stdout) -> Result<()> {
+        match key {
+            Key::Esc => {
+                self.set_mode(Mode::Normal);
+                self.update_view();
+                self.update_cursor(stdout)?;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
     fn handle_keys(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
         let stdin = stdin();
         for k in stdin.keys() {
             let key = k?;
-            match self.mode {
-                Mode::Normal => match key {
-                    Key::Char(':') => self.set_mode(Mode::Command),
-                    Key::Char('a') => {
-                        let line_len = self.buffer.line_at(self.cursor.y).len();
-                        if self.cursor.x < line_len {
-                            self.cursor.x += 1;
-                        } else if self.cursor.y + 1 < self.buffer.line_count() {
-                            self.cursor.y += 1;
-                            self.cursor.x = 0;
-                        }
-                        self.set_mode(Mode::Edit);
-                    }
-                    Key::Char('i') => self.set_mode(Mode::Edit),
-                    Key::Char('x') => {
-                        self.delete_under_cursor();
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    Key::Char('s') => {
-                        self.delete_under_cursor();
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                        self.set_mode(Mode::Edit);
-                    }
-                    // Key::Char('b') =>
-                    // Key::Char('w') =>
-                    // Key::Char('e') =>
-                    // Key::Char('r') =>
-                    // Key::Char('u') => ,
-                    // Key::Char('/') => ,
-                    // Key::Char('?') => ,
-                    Key::Char('v') => self.set_mode(Mode::Visual),
-                    Key::Left | Key::Right | Key::Up | Key::Down => {
-                        self.handle_cursor(key)?;
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    Key::Ctrl('s') => self.write_file(&self.current_file)?,
-                    Key::Ctrl('q') => break,
-                    _ => {}
-                },
-                Mode::Edit => match key {
-                    Key::Char('\n') => {
-                        let cur_line = self.buffer.line_at(self.cursor.y).to_owned();
-                        let (left, right) = cur_line.split_at(self.cursor.x);
-                        self.buffer.lines[self.cursor.y] = Line::from_string(left.to_owned());
-                        self.buffer
-                            .lines
-                            .insert(self.cursor.y + 1, Line::from_string(right.to_owned()));
-                        self.cursor.y += 1;
-                        self.cursor.x = 0;
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    Key::Char('\t') => {
-                        let tab_width = 4;
-                        let target_col = (self.cursor.x / tab_width + 1) * tab_width;
-                        let spaces_needed = target_col - self.cursor.x;
-                        for _ in 0..spaces_needed {
-                            self.buffer.insert_char(&(Location::from(self.cursor)), ' ');
-                        }
-                        self.cursor.x = target_col;
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    Key::Char(c) => {
-                        self.buffer.insert_char(&(Location::from(self.cursor)), c);
-                        self.cursor.x += 1;
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    Key::Backspace => {
-                        self.delete_under_cursor();
-                        if self.cursor.x == 0 && self.cursor.y > 0 {
-                            self.cursor.y -= 1;
-                            let prev_len = self.buffer.lines[self.cursor.y].grapheme_len();
-                            self.cursor.x = std::cmp::min(prev_len, self.cursor.x);
-                        } else if self.cursor.x > 0 {
-                            self.cursor.x -= 1;
-                        }
-                        self.update_view();
-                        self.update_cursor(stdout)?
-                    }
-                    Key::Esc => {
-                        self.set_mode(Mode::Normal);
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    Key::Left | Key::Right | Key::Up | Key::Down => {
-                        self.handle_cursor(key)?;
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    _ => {}
-                },
-                Mode::Command => match key {
-                    Key::Esc => {
-                        self.set_mode(Mode::Normal);
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    _ => {}
-                },
-                Mode::Visual => match key {
-                    Key::Esc => {
-                        self.set_mode(Mode::Normal);
-                        self.update_view();
-                        self.update_cursor(stdout)?;
-                    }
-                    _ => {}
-                },
-            }
+            self.process_key(key, stdout)?;
             self.view.render(stdout, &self.buffer)?;
             self.update_cursor(stdout)?;
             stdout.flush().unwrap();
