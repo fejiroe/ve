@@ -2,7 +2,7 @@ use crate::buffer::Buffer;
 use ratatui::termion::terminal_size;
 use std::io::{Result, Write};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct View {
     pub offset_y: usize,
     pub offset_x: usize,

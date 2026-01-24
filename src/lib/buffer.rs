@@ -9,7 +9,7 @@ pub struct Location {
     pub y: usize,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Line {
     pub raw: String,
     pub graphemes: Vec<usize>,
@@ -64,7 +64,7 @@ impl Line {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Buffer {
     pub lines: Vec<Line>,
 }
@@ -80,11 +80,21 @@ impl Default for Buffer {
 impl Buffer {
     pub fn insert_char(&mut self, loc: &Location, c: char) {
         let line = &mut self.lines[loc.y];
+        if self.lines.is_empty() {
+            self.lines.push(Line::new());
+        }
+        while self.lines.len() <= loc.y {
+            self.lines.push(Line::new());
+        }
+        let line = &mut self.lines[loc.y];
         line.insert(loc.x, c);
     }
     pub fn delete_char(&mut self, loc: &Location) -> bool {
         if loc.y == 0 && loc.x == 0 {
             return false;
+        }
+        if self.lines.is_empty() {
+            self.lines.push(Line::new());
         }
         if loc.x > 0 {
             let line = &mut self.lines[loc.y];

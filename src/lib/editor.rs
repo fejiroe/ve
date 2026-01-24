@@ -11,6 +11,7 @@ use crate::keyhandler::{KeyHandler, Mode};
 use crate::terminal::Terminal;
 use crate::view::View;
 
+#[derive(Debug)]
 pub struct Editor {
     pub current_file: PathBuf, /* shouldn't be pub */
     pub mode: Mode,            /* shouldn't be pub */
@@ -60,6 +61,11 @@ impl Editor {
         let (cols, rows) = ratatui::termion::terminal_size().unwrap_or((80, 24));
         let _max_cols = cols as usize;
         let max_rows = rows as usize;
+        if self.buffer.line_count() == 0 {
+            self.view.offset_x = 0;
+            self.view.offset_y = 0;
+            return;
+        }
         let (new_offset_x, new_offset_y) = self.cursor.maybe_scroll(&self.view);
         let line = &self.buffer.lines[new_offset_y];
         let current_line_len = line.grapheme_len();
