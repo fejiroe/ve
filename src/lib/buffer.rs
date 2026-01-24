@@ -132,6 +132,9 @@ impl Buffer {
             .map(|l| Line::from_string(l.to_owned()))
             .collect::<Vec<Line>>();
         self.lines = input;
+        if contents.ends_with('\n') {
+            self.lines.push(Line::new());
+        }
         if self.lines.is_empty() {
             self.lines.push(Line::new());
         }
