@@ -114,15 +114,13 @@ impl Buffer {
         self.lines.is_empty()
     }
     pub fn buffer_to_string(&self) -> String {
-        if self.is_empty() {
-            String::new()
-        } else {
-            self.lines
-                .iter()
-                .map(|l| l.as_str())
-                .collect::<Vec<_>>()
-                .join("\n")
+        let mut out = self.lines.iter().map(|l| l.as_str()).collect::<Vec<_>>();
+        if let Some(last) = out.last() {
+            if last.is_empty() {
+                out.pop();
+            }
         }
+        out.join("\n")
     }
     pub fn read_file(&mut self, path: &Path) -> Result<()> {
         let contents = fs::read_to_string(path)?;

@@ -36,8 +36,6 @@ impl Editor {
             }
             Err(e) => return Err(e),
         }
-        self.view.offset_x = 0;
-        self.view.offset_y = 0;
         Ok(())
     }
     pub fn write_file(&self, path: &Path) -> Result<()> {
