@@ -11,28 +11,13 @@ use crate::keyhandler::{KeyHandler, Mode};
 use crate::terminal::Terminal;
 use crate::view::View;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Editor {
     pub current_file: PathBuf,
     pub mode: Mode,
     pub buffer: Buffer,
     pub view: View,
     pub cursor: Cursor,
-}
-
-impl Default for Editor {
-    fn default() -> Self {
-        Self {
-            current_file: PathBuf::new(),
-            mode: Mode::Normal,
-            buffer: Buffer::default(),
-            view: View {
-                offset_y: 0,
-                offset_x: 0,
-            },
-            cursor: Cursor::default(),
-        }
-    }
 }
 
 impl Editor {

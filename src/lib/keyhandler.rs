@@ -1,8 +1,9 @@
 use ratatui::termion::event::Key;
 use std::io::Result;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
+    #[default]
     Normal,
     Edit,
     Replace,
