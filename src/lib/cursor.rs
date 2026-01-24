@@ -1,4 +1,3 @@
-use ratatui::termion::event::Key;
 use std::io::{Result, Write};
 
 use crate::buffer::Location;
@@ -82,18 +81,5 @@ impl Cursor {
         let cur_y = (self.y as i32 - view_offset_y as i32).max(0) as u16 + 1;
         write!(stdout, "{}", ratatui::termion::cursor::Goto(cur_x, cur_y))?;
         stdout.flush()
-    }
-}
-
-impl Cursor {
-    pub fn handle_key(&mut self, key: Key, buffer: &crate::buffer::Buffer) -> (usize, usize) {
-        match key {
-            Key::Left => self.move_left(buffer),
-            Key::Right => self.move_right(buffer),
-            Key::Up => self.move_up(buffer),
-            Key::Down => self.move_down(buffer),
-            _ => {}
-        }
-        self.maybe_scroll(&crate::view::View::default())
     }
 }

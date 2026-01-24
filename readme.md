@@ -1,6 +1,7 @@
 simple modal editor in rust.
 
-'i' for insert mode, 'esc' to return to normal mode, 'ctrl+q' to exit, 'ctrl+s' to save the file in normal mode.
+'i', 'a', 'x', 's', 'r' from vi mostly work as expected
+'ctrl+q' to exit, 'ctrl+s' to save the file in normal mode
 
 "cargo build --release" and copy wherever appropriate or "cargo install --path ."
 

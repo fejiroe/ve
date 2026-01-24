@@ -4,7 +4,6 @@ use std::io::{Result, Write};
 
 #[derive(Default)]
 pub struct View {
-    pub needs_update: bool, // still does nothing
     pub offset_y: usize,
     pub offset_x: usize,
 }
