@@ -28,7 +28,6 @@ impl Default for Editor {
             view: View {
                 offset_y: 0,
                 offset_x: 0,
-                ..Default::default()
             },
             cursor: Cursor::default(),
         }
