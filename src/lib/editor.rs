@@ -12,8 +12,8 @@ use crate::terminal::Terminal;
 use crate::view::View;
 
 pub struct Editor {
-    pub current_file: PathBuf,
-    pub mode: Mode,
+    pub current_file: PathBuf, /* shouldn't be pub */
+    pub mode: Mode,            /* shouldn't be pub */
     pub buffer: Buffer,
     pub view: View,
     pub cursor: Cursor,

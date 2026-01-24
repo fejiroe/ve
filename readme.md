@@ -7,6 +7,7 @@ simple modal editor in rust.
 
 todo:
 
+- fix off by one in buffer when opening files (cursor is offset by one line)
 - undo/redo
 - about / help / man screen/popup
 - more motions
