@@ -38,7 +38,7 @@ impl Cursor {
             self.y -= 1;
         }
         let line_len = buffer.lines[self.y].grapheme_len();
-        if self.x > line_len {
+        if self.x >= line_len {
             self.x = line_len;
         }
     }
@@ -48,7 +48,7 @@ impl Cursor {
             self.y += 1;
         }
         let line_len = buffer.lines[self.y].grapheme_len();
-        if self.x > line_len {
+        if self.x >= line_len {
             self.x = line_len;
         }
     }
