@@ -16,6 +16,15 @@ impl From<Cursor> for Location {
 
 impl Cursor {
     pub fn move_left(&mut self, buffer: &crate::buffer::Buffer) {
+        debug_assert!(
+            self.y < buffer.lines.len(),
+            "cursor out of bounds on move_left"
+        );
+        let line_len = buffer.lines[self.y].grapheme_len();
+        debug_assert!(
+            self.x <= line_len,
+            "cursor column out of bounds on move_left"
+        );
         if self.x > 0 {
             self.x -= 1;
         } else if self.y > 0 {
@@ -25,7 +34,15 @@ impl Cursor {
         }
     }
     pub fn move_right(&mut self, buffer: &crate::buffer::Buffer) {
+        debug_assert!(
+            self.y < buffer.lines.len(),
+            "cursor out of bounds on move_right"
+        );
         let line_len = buffer.lines[self.y].grapheme_len();
+        debug_assert!(
+            self.x <= line_len,
+            "cursor column out of bounds on move_right"
+        );
         if self.x + 1 < line_len {
             self.x += 1;
         } else if self.y + 1 < buffer.line_count() {
@@ -43,11 +60,19 @@ impl Cursor {
         }
     }
     pub fn move_down(&mut self, buffer: &crate::buffer::Buffer) {
+        debug_assert!(
+            self.y < buffer.lines.len(),
+            "cursor out of bounds on move_down"
+        );
         let last_line = buffer.line_count().saturating_sub(1);
         if self.y < last_line {
             self.y += 1;
         }
         let line_len = buffer.lines[self.y].grapheme_len();
+        debug_assert!(
+            self.x <= line_len,
+            "cursor column out of bounds after move_down"
+        );
         if self.x >= line_len {
             self.x = line_len;
         }
