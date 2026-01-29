@@ -1,5 +1,3 @@
-pub mod terminal;
-pub use terminal::Terminal;
 pub mod buffer;
 pub use buffer::Buffer;
 pub use buffer::Location;

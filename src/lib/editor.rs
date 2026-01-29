@@ -8,7 +8,6 @@ use std::path::{Path, PathBuf};
 use crate::buffer::Buffer;
 use crate::cursor::Cursor;
 use crate::keyhandler::{KeyHandler, Mode};
-use crate::terminal::Terminal;
 use crate::view::View;
 
 #[derive(Debug, Default)]
@@ -104,26 +103,25 @@ impl Editor {
             self.buffer.lines[self.cursor.y].push_str(&next.raw);
         }
     }
-    pub fn run(&mut self) -> Result<()> {
-        let mut term = Terminal::new()?;
+    pub fn run(&mut self, stdout: &mut std::io::Stdout) -> Result<()> {
         write!(
-            term.stdout,
+            stdout,
             "{}{}",
             ratatui::termion::clear::All,
             ratatui::termion::cursor::Goto(1, 1)
         )
         .unwrap();
-        term.stdout.flush().unwrap();
-        self.view.render(&mut term.stdout, &self.buffer)?;
-        self.update_cursor(&mut term.stdout)?;
+        stdout.flush().unwrap();
+        self.view.render(stdout, &self.buffer)?;
+        self.update_cursor(stdout)?;
         let stdin = stdin();
         for k in stdin.keys() {
             let key = k?;
             let mut kh = KeyHandler::new(self);
-            kh.process_key(key, &mut term.stdout)?;
-            self.view.render(&mut term.stdout, &self.buffer)?;
-            self.update_cursor(&mut term.stdout)?;
-            term.stdout.flush().unwrap();
+            kh.process_key(key, stdout)?;
+            self.view.render(stdout, &self.buffer)?;
+            self.update_cursor(stdout)?;
+            stdout.flush().unwrap();
         }
         Ok(())
     }
